@@ -10,11 +10,20 @@ var body = function(x) {
 	var nested = 0, accum = '';
 	for( var i = 0; i < x.length; i++ ) {
 		var read = x[i];
-		if( read == '{' ) nested++;
-		else if( read == '}' ) {
+		if( read == '{' ) {
+			nested++;
+			if( nested != 1 ) {
+				accum += read;
+			}
+		} else if( read == '}' ) {
 			nested--;
 			if( nested == 0 ) {
-				return accum;
+				return {
+					body: accum,
+					rest: x.substr(i+1)
+				};
+			} else {
+				accum += read;
 			}
 		}
 		else accum += read;
@@ -63,6 +72,7 @@ var group = function(arr) {
 	grouped.push(accum);
 	return grouped.slice(1);
 };
+var length = function(x){return x.length};
 var singleton = function(x) {return [x];};
 var parse = function(x, toplevel) {
 	var variable = "[A-Za-z0-9_$+\-\/*]+",
@@ -70,15 +80,15 @@ var parse = function(x, toplevel) {
 		call = "("+variable+")\\(("+variable+")?((, "+variable+")*?)\\)";
 	x = x.replace(/^\s+/, '');
 	if( x.match(leading(variable+"\\(")) ) {
-		if( x.match(leading(call)) ) {
+		if( x.match(leading(call)) ) {			
 			var parts = x.match(leading(call)),
 				fn = parts[1],
 				args = ((parts[2]||'')+(parts[3]||'')).split(/,\s?/),
-				rest = parse(x.substr(parts[0].length));			
+				rest = parse(x.substr(parts[0].length));						
 			if( rest.length ) {
 				// TOOD: allow for arbitrary block count
 				if( rest[0][0] == 'block' ) {
-					if( rest[1][0] == 'block' ) {
+					if( rest[1] && rest[1][0] == 'block' ) {
 						if( rest.length > 2 ) {
 							return [[fn].concat([args]).concat([rest[0], rest[1]]),
 					                rest.slice(2)];
@@ -99,7 +109,7 @@ var parse = function(x, toplevel) {
 			} else {
 				if( toplevel ) {
 					return [[fn].concat([args])];
-				} else {
+				} else {					
 					return [fn].concat([args]);
 				}
 			}
@@ -118,8 +128,11 @@ var parse = function(x, toplevel) {
 			return toplevel ? [parsed] : parsed;
 		}
 	} else if( x.match(leading(block)) && x.match(closing(block)) ) {
-		var content = body(x).split(/\n/);
-		return [["block"].concat([content.filter(identity).map(function(x){return parse(x)})])].concat(parse(x.substr(body(x).length+2)));
+		var content = body(x).body;		
+		parsed = content.indexOf(';') != -1 ? content.split(';').map(function(x) {
+			return parse(x);
+		}) : parse(content, true);
+		return [["block"].concat([parsed])].concat(parse(body(x).rest));
 	} else {
 		return [];
 	}
@@ -180,11 +193,15 @@ fs.readFile(__dirname + '/' + process.argv[2], function(err, read) {
 	var prelude = {
 		"+": function(a,b) {
 			return a+b;
+		}, "-": function(a,b) {
+			return a-b;
 		}, "*": function(a,b) {
 			return a*b;
 		}, "return": identity,
 		   "write": function(x){
 		   	console.log(x); return true;
+		}, "eq": function(a,b) {
+			return a==b;
 		}
 	};
 	if(process.argv[3] == 'debug') console.log(JSON.stringify(parse(read+"")));

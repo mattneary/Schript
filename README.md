@@ -34,10 +34,10 @@ __Passing__:
 
 ```javascript
 defun(fact, n) {
-	if(eq(n,0)) {
-		return(1)
+	if(n) {
+		*(n,fact(n-1))
 	} {
-		*(n,fact(n-1))	
+		return(1)
 	}
 }
 ```
