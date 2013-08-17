@@ -20,6 +20,32 @@ var body = function(x) {
 		else accum += read;
 	}
 };
+var application = function(x) {
+	var nested = 0, args = [], accum = '';
+	for( var i = 0; i < x.length; i++ ) {
+		var read = x[i];
+		if( read == '(' ) {
+			nested++;
+			if( nested != 1 ) {
+				accum += read;
+			}
+		} else if( read == ')' ) {
+			nested--;
+			if( nested == 0 ) {	
+				args.push(accum);			
+				return args;
+			} else {
+				accum += read;
+			}
+		} else if( read == ',' && nested == 1 ) {
+			args.push(accum);
+			accum = [];
+		} else if( read.match(/\s/) && nested == 1 ) {
+			// nothing.
+		}
+		else accum += read;
+	}
+};
 var group = function(arr) {
 	var grouped = [],
 		accum = [];
@@ -43,20 +69,34 @@ var parse = function(x) {
 		block = "\{|\}",
 		call = "("+variable+")\\(("+variable+")?((, "+variable+")*?)\\)";
 	x = x.replace(/^\s+/, '');
-	if( x.match(leading(call)) ) {
-		var parts = x.match(leading(call)),
-			fn = parts[1],
-			args = ((parts[2]||'')+(parts[3]||'')).split(/,\s?/),
-			rest = parse(x.substr(parts[0].length));			
-		if( rest.length ) {
-			if( rest[0][0] == 'block' ) {
-				return [[fn].concat([args]).concat([rest[0]]),
-			            rest.slice(1)];
+	if( x.match(leading(variable+"\\(")) ) {
+		if( x.match(leading(call)) ) {
+			var parts = x.match(leading(call)),
+				fn = parts[1],
+				args = ((parts[2]||'')+(parts[3]||'')).split(/,\s?/),
+				rest = parse(x.substr(parts[0].length));			
+			if( rest.length ) {
+				if( rest[0][0] == 'block' ) {
+					return [[fn].concat([args]).concat([rest[0]]),
+				            rest.slice(1)];
+				} else {
+					return ['block', [[fn].concat([args])].concat(group(rest))];
+				}
 			} else {
-				return ['block', [[fn].concat([args])].concat(group(rest))];
+				return [fn].concat([args]);
 			}
 		} else {
-			return [fn].concat([args]);
+			var args = x.split('(').slice(1).join('('),
+				applied = application('('+args);	
+			return [x.split('(')[0], applied.map(function(arg) {
+				if( arg.match(leading(variable+"\\(")) ) {
+					// TOOD: make a general check for complex forms...
+					//       i.e., include blocks, etc.
+					return parse(arg);
+				} else {
+					return arg;
+				}
+			})];
 		}
 	} else if( x.match(leading(block)) && x.match(closing(block)) ) {
 		var content = body(x).split(/\n/);
@@ -110,14 +150,14 @@ var evalseq = function(exprs, m) {
 		return evalseq(exprs.slice(1), eval(exprs[0], m.env))
 	}
 };
-fs.readFile(__dirname + '/example.sch', function(err, read) {
+fs.readFile(__dirname + '/' + process.argv[2], function(err, read) {
 	var prelude = {
 		"+": function(a,b) {
 			return a+b;
 		}, "*": function(a,b) {
 			return a*b;
-		}
+		}, "return": identity
 	};
-	console.log(JSON.stringify(parse(read+"")));
+	if(process.argv[3] == 'debug') console.log(JSON.stringify(parse(read+"")));
 	console.log(evalseq(parse(read+""), {env:prelude}).val);
 });
