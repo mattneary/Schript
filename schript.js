@@ -66,13 +66,19 @@ var eval = function(expr, env) {
 			val: fun,
 			env: env
 		};
-	} else if( expr[0] == 'block' ) {
+	} else if( expr[0] == 'define' ) {		
+		env[expr[1]] = eval(expr[2], env);
+		return {
+			val: fun,
+			env: env
+		};
+	}  else if( expr[0] == 'block' ) {
 		return {
 			val: eval(expr[1], env),
 			env: env
 		};
 	} else {
-		return env[expr[0]].apply({}, expr[1].map(function(x){return eval(x,env).val;}));
+		return env[expr[0]].apply({}, expr[1].map(function(x){ return eval(x,env).val; }));
 	}
 };
 var evalseq = function(exprs, m) {
