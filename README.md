@@ -4,11 +4,14 @@ Schript will be a JavaScript dialect made more homiconic, like Scheme. This will
 
 Status
 ------
-Very little progress has been made; mostly, this is just an idea.
+Parsing works for the most part. The next task will be to make blocks more first-class.
 
 Syntax
 ------
 ###Invocation
+
+__Passing__:
+
 ```javascript
 write("Hello, World")
 ```
@@ -31,6 +34,8 @@ defun(fact, n) {
 }
 ```
 
+__Passing__:
+
 ```javascript
 define(x, 5)
 ```
@@ -44,4 +49,4 @@ cond(eq(n,0) => 1,
 
 Roadmap
 -------
-__TODO__: handling of subsequent lines is inconsistent because of block expectations.
+- Make blocks more first-class.

@@ -64,7 +64,7 @@ var group = function(arr) {
 	return grouped.slice(1);
 };
 var singleton = function(x) {return [x];};
-var parse = function(x) {
+var parse = function(x, toplevel) {
 	var variable = "[A-Za-z0-9_$+\-\/*]+",
 		block = "\{|\}",
 		call = "("+variable+")\\(("+variable+")?((, "+variable+")*?)\\)";
@@ -83,12 +83,16 @@ var parse = function(x) {
 					return ['block', [[fn].concat([args])].concat(group(rest))];
 				}
 			} else {
-				return [fn].concat([args]);
+				if( toplevel ) {
+					return [[fn].concat([args])];
+				} else {
+					return [fn].concat([args]);
+				}
 			}
 		} else {
 			var args = x.split('(').slice(1).join('('),
 				applied = application('('+args);	
-			return [x.split('(')[0], applied.map(function(arg) {
+			var parsed = [x.split('(')[0], applied.map(function(arg) {
 				if( arg.match(leading(variable+"\\(")) ) {
 					// TOOD: make a general check for complex forms...
 					//       i.e., include blocks, etc.
@@ -97,6 +101,7 @@ var parse = function(x) {
 					return arg;
 				}
 			})];
+			return toplevel ? [parsed] : parsed;
 		}
 	} else if( x.match(leading(block)) && x.match(closing(block)) ) {
 		var content = body(x).split(/\n/);
@@ -138,7 +143,9 @@ var eval = function(expr, env) {
 		return evalseq(expr[1], {env:env});
 	} else {
 		return {
-			val: env[expr[0]].apply({}, expr[1].map(function(x){ return eval(x,env).val; })),
+			val: env[expr[0]].apply({}, expr[1].map(function(x){
+				return eval(x,env).val; 
+			})),
 			env: env
 		};
 	}
@@ -156,8 +163,11 @@ fs.readFile(__dirname + '/' + process.argv[2], function(err, read) {
 			return a+b;
 		}, "*": function(a,b) {
 			return a*b;
-		}, "return": identity
+		}, "return": identity,
+		   "write": function(x){
+		   	console.log(x); return true;
+		}
 	};
 	if(process.argv[3] == 'debug') console.log(JSON.stringify(parse(read+"")));
-	console.log(evalseq(parse(read+""), {env:prelude}).val);
+	console.log(evalseq(parse(read+"", true), {env:prelude}).val);
 });
