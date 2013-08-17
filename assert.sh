@@ -1,1 +1,0 @@
-grep "^$1$" | ./render.sh $2
