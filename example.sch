@@ -1,4 +1,5 @@
 defun(succ, n) {
 	+(n, 1)
 }
-succ(2)
+define(x, 2)
+succ(x)

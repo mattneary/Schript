@@ -20,6 +20,24 @@ var body = function(x) {
 		else accum += read;
 	}
 };
+var group = function(arr) {
+	var grouped = [],
+		accum = [];
+	for( var k in arr ) {
+		var item = arr[k];
+		if( typeof item == 'string' ) {
+			grouped.push(accum);
+			accum = [item];
+		} else if( item[0] == 'block' ) {
+			accum.push(item);
+		} else {
+			accum.push(item);
+		}
+	}
+	grouped.push(accum);
+	return grouped.slice(1);
+};
+var singleton = function(x) {return [x];};
 var parse = function(x) {
 	var variable = "[A-Za-z0-9_$+\-\/*]+",
 		block = "\{|\}",
@@ -31,14 +49,18 @@ var parse = function(x) {
 			args = ((parts[2]||'')+(parts[3]||'')).split(/,\s?/),
 			rest = parse(x.substr(parts[0].length));			
 		if( rest.length ) {
-			return [[fn].concat([args]).concat([rest[0]]),
-			        rest.slice(1)];
+			if( rest[0][0] == 'block' ) {
+				return [[fn].concat([args]).concat([rest[0]]),
+			            rest.slice(1)];
+			} else {
+				return ['block', [[fn].concat([args])].concat(group(rest))];
+			}
 		} else {
 			return [fn].concat([args]);
 		}
 	} else if( x.match(leading(block)) && x.match(closing(block)) ) {
 		var content = body(x).split(/\n/);
-		return [["block"].concat(content.filter(identity).map(function(x){return parse(x)}))].concat(parse(x.substr(body(x).length+2)));
+		return [["block"].concat([content.filter(identity).map(function(x){return parse(x)})])].concat(parse(x.substr(body(x).length+2)));
 	} else {
 		return [];
 	}
@@ -59,26 +81,26 @@ var eval = function(expr, env) {
 			for( var k in args ) {
 				dup[args[k]] = arguments[k];
 			}
-			return eval(expr[2], dup)
+			return eval(expr[2], dup).val;
 		};
 		env[expr[1][0]] = fun;
 		return {
 			val: fun,
 			env: env
 		};
-	} else if( expr[0] == 'define' ) {		
-		env[expr[1]] = eval(expr[2], env);
+	} else if( expr[0] == 'define' ) {	
+		env[expr[1][0]] = eval(expr[1][1], env).val;
 		return {
-			val: fun,
+			val: env[expr[1]],
 			env: env
 		};
 	}  else if( expr[0] == 'block' ) {
+		return evalseq(expr[1], {env:env});
+	} else {
 		return {
-			val: eval(expr[1], env),
+			val: env[expr[0]].apply({}, expr[1].map(function(x){ return eval(x,env).val; })),
 			env: env
 		};
-	} else {
-		return env[expr[0]].apply({}, expr[1].map(function(x){ return eval(x,env).val; }));
 	}
 };
 var evalseq = function(exprs, m) {
