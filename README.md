@@ -42,9 +42,9 @@ define(x, 5)
 
 ###Shorthands
 ```ruby
-cond(eq(n,0) => 1,
-     eq(car(n),0) => 2,
-     true => 3)
+cond(eq(n, 0), { 1 },
+     eq(car(n), 0), { 2 },
+     true, { 3 })
 ```
 
 Roadmap
