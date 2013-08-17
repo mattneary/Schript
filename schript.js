@@ -21,7 +21,7 @@ var body = function(x) {
 	}
 };
 var parse = function(x) {
-	var variable = "[A-Za-z0-9_$]+",
+	var variable = "[A-Za-z0-9_$+\-\/*]+",
 		block = "\{|\}",
 		call = "("+variable+")\\(("+variable+")?((, "+variable+")*?)\\)";
 	x = x.replace(/^\s+/, '');
@@ -29,11 +29,11 @@ var parse = function(x) {
 		var parts = x.match(leading(call)),
 			fn = parts[1],
 			args = ((parts[2]||'')+(parts[3]||'')).split(/,\s?/),
-			rest = parse(x.substr(parts[0].length));
-		return [fn].concat(args).concat(rest);
+			rest = parse(x.substr(parts[0].length));			
+		return [fn].concat([args]).concat(rest);
 	} else if( x.match(leading(block)) && x.match(closing(block)) ) {
 		var content = body(x).split(/\n/);
-		return [["block"].concat(content.filter(identity).map(function(x){return parse(x).slice(0,2)}))].concat(parse(x.substr(body(x).length+2)));
+		return [["block"].concat(content.filter(identity).map(function(x){return parse(x)}))].concat(parse(x.substr(body(x).length+2)));
 	} else {
 		return [];
 	}
@@ -41,31 +41,41 @@ var parse = function(x) {
 var eval = function(expr, env) {
 	if( typeof expr == 'string' ) {
 		return {
-			val: env[expr],
+			val: expr.match(/^[0-9]+$/) ? parseInt(expr) : env[expr],
 			env: env
 		};
-	} else if( expr[0] == 'function' ) {
+	} else if( expr[0] == 'defun' ) {
 		return {
-			val: function(x) {
+			val: function() {
 				var dup = {};
-				for( var k in env ) {
+				var args = expr[1].slice(1);
+				for(var k in env) {
 					dup[k] = env[k];
 				}
-				dup[expr[1]] = x;
-				return eval(expr[2], dup);
+				for( var k in args ) {
+					dup[args[k]] = arguments[k];
+				}
+				return eval(expr[2], dup)
 			},
 			env: env
 		};
 	} else if( expr[0] == 'block' ) {
 		return {
-			val: expr.slice(1).reduce(function(a, b) {			
-				return eval(b, a.env);
-			}, {env:env}),
+			val: eval(expr[1], env),
 			env: env
 		};
+	} else {
+		return env[expr[0]].apply({}, expr[1].map(function(x){return eval(x,env).val;}));
 	}
 };
 fs.readFile(__dirname + '/example.sch', function(err, read) {
+	var prelude = {
+		"+": function(a,b) {
+			return a+b;
+		}, "*": function(a,b) {
+			return a*b;
+		}
+	};
 	console.log(JSON.stringify(parse(read+"")));
-	console.log(eval(parse(read+"")[0], {x:1}));
+	console.log(eval(parse(read+""), prelude).val(2).val);
 });
