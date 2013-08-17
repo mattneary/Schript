@@ -30,7 +30,12 @@ var parse = function(x) {
 			fn = parts[1],
 			args = ((parts[2]||'')+(parts[3]||'')).split(/,\s?/),
 			rest = parse(x.substr(parts[0].length));			
-		return [fn].concat([args]).concat(rest);
+		if( rest.length ) {
+			return [[fn].concat([args]).concat([rest[0]]),
+			        rest.slice(1)];
+		} else {
+			return [fn].concat([args]);
+		}
 	} else if( x.match(leading(block)) && x.match(closing(block)) ) {
 		var content = body(x).split(/\n/);
 		return [["block"].concat(content.filter(identity).map(function(x){return parse(x)}))].concat(parse(x.substr(body(x).length+2)));
@@ -45,18 +50,20 @@ var eval = function(expr, env) {
 			env: env
 		};
 	} else if( expr[0] == 'defun' ) {
+		var fun = function() {
+			var dup = {};
+			var args = expr[1].slice(1);
+			for(var k in env) {
+				dup[k] = env[k];
+			}
+			for( var k in args ) {
+				dup[args[k]] = arguments[k];
+			}
+			return eval(expr[2], dup)
+		};
+		env[expr[1][0]] = fun;
 		return {
-			val: function() {
-				var dup = {};
-				var args = expr[1].slice(1);
-				for(var k in env) {
-					dup[k] = env[k];
-				}
-				for( var k in args ) {
-					dup[args[k]] = arguments[k];
-				}
-				return eval(expr[2], dup)
-			},
+			val: fun,
 			env: env
 		};
 	} else if( expr[0] == 'block' ) {
@@ -68,6 +75,13 @@ var eval = function(expr, env) {
 		return env[expr[0]].apply({}, expr[1].map(function(x){return eval(x,env).val;}));
 	}
 };
+var evalseq = function(exprs, m) {
+	if( !exprs.length ) {
+		return m;
+	} else {
+		return evalseq(exprs.slice(1), eval(exprs[0], m.env))
+	}
+};
 fs.readFile(__dirname + '/example.sch', function(err, read) {
 	var prelude = {
 		"+": function(a,b) {
@@ -77,5 +91,5 @@ fs.readFile(__dirname + '/example.sch', function(err, read) {
 		}
 	};
 	console.log(JSON.stringify(parse(read+"")));
-	console.log(eval(parse(read+""), prelude).val(2).val);
+	console.log(evalseq(parse(read+""), {env:prelude}).val);
 });
