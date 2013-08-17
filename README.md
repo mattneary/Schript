@@ -17,17 +17,25 @@ write("Hello, World")
 ```
 
 ###Blocks
+
+__Passing__:
+
 ```javascript
 if(true) {
 	write("Truuu")
+} {
+	return(0)
 }
 ```
 
 ###Definitions
+
+__Passing__:
+
 ```javascript
 defun(fact, n) {
 	if(eq(n,0)) {
-		1
+		return(1)
 	} {
 		*(n,fact(n-1))	
 	}
@@ -50,3 +58,4 @@ cond(eq(n, 0), { 1 },
 Roadmap
 -------
 - Make blocks more first-class.
+- Think about the handling of the environment.

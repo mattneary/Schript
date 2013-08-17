@@ -76,9 +76,23 @@ var parse = function(x, toplevel) {
 				args = ((parts[2]||'')+(parts[3]||'')).split(/,\s?/),
 				rest = parse(x.substr(parts[0].length));			
 			if( rest.length ) {
+				// TOOD: allow for arbitrary block count
 				if( rest[0][0] == 'block' ) {
-					return [[fn].concat([args]).concat([rest[0]]),
-				            rest.slice(1)];
+					if( rest[1][0] == 'block' ) {
+						if( rest.length > 2 ) {
+							return [[fn].concat([args]).concat([rest[0], rest[1]]),
+					                rest.slice(2)];
+					    } else {
+					    	return [[fn].concat([args]).concat([rest[0], rest[1]])];
+					    }
+				    } else {
+				    	if( rest.length > 1 ) {
+					    	return [[fn].concat([args]).concat([rest[0]]),
+					    	        rest.slice(1)];
+						} else {
+							return [[fn].concat([args]).concat([rest[0]])];
+						}
+				    }
 				} else {
 					return ['block', [[fn].concat([args])].concat(group(rest))];
 				}
@@ -133,13 +147,18 @@ var eval = function(expr, env) {
 			val: fun,
 			env: env
 		};
+	} else if( expr[0] == 'if' ) {
+		return {
+			val: eval(expr[1][0], env).val ? eval(expr[2], env).val : eval(expr[3], env).val,
+			env: env
+		};
 	} else if( expr[0] == 'define' ) {	
 		env[expr[1][0]] = eval(expr[1][1], env).val;
 		return {
 			val: env[expr[1]],
 			env: env
 		};
-	}  else if( expr[0] == 'block' ) {
+	} else if( expr[0] == 'block' ) {
 		return evalseq(expr[1], {env:env});
 	} else {
 		return {
