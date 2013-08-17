@@ -59,3 +59,6 @@ Roadmap
 -------
 - Make blocks more first-class.
 - Think about the handling of the environment.
+- `set!` function etc.
+- bootstrap it.
+- compiler.
