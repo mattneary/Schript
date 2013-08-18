@@ -4,33 +4,11 @@ Schript will be a JavaScript dialect made more homiconic, like Scheme. This will
 
 Status
 ------
-Parsing works for the most part. The next task will be to make blocks more first-class.
+This language is *very* far from stable, but was sufficiently implemented as an example of macros in a JavaScript-like language.
 
 Syntax
 ------
-###Invocation
-
-__Passing__:
-
-```javascript
-write("Hello, World")
-```
-
-###Blocks
-
-__Passing__:
-
-```javascript
-if(true) {
-	write("Truuu")
-} {
-	return(0)
-}
-```
-
 ###Definitions
-
-__Passing__:
 
 ```javascript
 defun(fact, n) {
@@ -42,18 +20,43 @@ defun(fact, n) {
 }
 ```
 
-__Passing__:
-
 ```javascript
 define(x, 5)
 ```
 
+###Invocation
+
+```javascript
+write("Hello, World")
+```
+
 ###Shorthands
+
+__TODO__:
+
 ```ruby
 cond(eq(n, 0), { 1 },
      eq(car(n), 0), { 2 },
      true, { 3 })
 ```
+
+Macros
+------
+Macros have been implemented to allow syntax definition within programs. The following defines a `let` macro which will serve to define a variable over the scope of a block.
+
+```javascript
+defmacro(let, name, val, expr) {
+	defun(tmp, `name) {
+		return(`expr)
+	}
+	tmp(`val)
+}
+let(a, 56) {
+	write(a)
+}
+```
+
+Note the back-tick notation which denotes an expression as a value to be inserted into the returned syntax; all other expressions are evaluated upon invocation of the macro.
 
 Roadmap
 -------
