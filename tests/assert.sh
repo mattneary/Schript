@@ -1,1 +1,3 @@
-grep "^$1$" | tests/render.sh $2
+goal=$1
+shift
+grep "^$goal$" | tests/render.sh $*

@@ -1,12 +1,14 @@
 node lib/schript.js ../tests/defines.sch | \
-	tests/assert.sh 6 "defines"
+	tests/assert.sh 6 defines
 node lib/schript.js ../tests/nested_fns.sch | \
-	tests/assert.sh 5 "nested"
+	tests/assert.sh 5 nested
 node lib/schript.js ../tests/io.sch | \
-	tests/assert.sh 1 "I/O"	
+	tests/assert.sh 1 I/O
 node lib/schript.js ../tests/conds.sch | \
-	tests/assert.sh 5 "conditionals"	
+	tests/assert.sh 5 conditionals
 node lib/schript.js ../tests/recursion.sch | \
-	tests/assert.sh 24 "recursion"			
+	tests/assert.sh 24 recursion
 node lib/schript.js ../tests/macros.sch | \
-	tests/assert.sh 56 "internal macros"				
+	tests/assert.sh 56 internal macros
+node lib/schript.js ../tests/defmacro.sch | \
+	tests/assert.sh 56 userland macros
