@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Schript by mattneary</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/mattneary/Schript">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/mattneary/Schript/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/mattneary/Schript/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Schript</h1>
+          <p>JS designed for Macros.</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/mattneary">mattneary</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>
+<a name="schript" class="anchor" href="#schript"><span class="octicon octicon-link"></span></a>Schript</h1>
+
+<p>Schript will be a JavaScript dialect made more uniform, like Scheme. This allows for user-defined macros to work in a natural way; this is the primary motivation of the project.</p>
+
+<h2>
+<a name="syntax" class="anchor" href="#syntax"><span class="octicon octicon-link"></span></a>Syntax</h2>
+
+<h3>
+<a name="definitions" class="anchor" href="#definitions"><span class="octicon octicon-link"></span></a>Definitions</h3>
+
+<div class="highlight"><pre><span class="nx">defun</span><span class="p">(</span><span class="nx">fact</span><span class="p">,</span> <span class="nx">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="p">{</span>
+        <span class="o">*</span><span class="p">(</span><span class="nx">n</span><span class="p">,</span><span class="nx">fact</span><span class="p">(</span><span class="nx">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="p">}</span> <span class="p">{</span>
+        <span class="k">return</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+<div class="highlight"><pre><span class="nx">define</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+</pre></div>
+
+<h3>
+<a name="invocation" class="anchor" href="#invocation"><span class="octicon octicon-link"></span></a>Invocation</h3>
+
+<div class="highlight"><pre><span class="nx">write</span><span class="p">(</span><span class="s2">"Hello, World"</span><span class="p">)</span>
+</pre></div>
+
+<h3>
+<a name="macros" class="anchor" href="#macros"><span class="octicon octicon-link"></span></a>Macros</h3>
+
+<p>Macros have been implemented to allow syntax definition within programs. The following defines a <code>let</code> macro which will serve to define a variable over the scope of a block.</p>
+
+<div class="highlight"><pre><span class="nx">defmacro</span><span class="p">(</span><span class="kd">let</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">val</span><span class="p">,</span> <span class="nx">expr</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">defun</span><span class="p">(</span><span class="nx">tmp</span><span class="p">,</span> <span class="err">`</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span><span class="p">(</span><span class="err">`</span><span class="nx">expr</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="nx">tmp</span><span class="p">(</span><span class="err">`</span><span class="nx">val</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="kd">let</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="mi">56</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">write</span><span class="p">(</span><span class="nx">a</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+
+<p>Note the back-tick notation which denotes an expression as a value to be inserted into the returned syntax; all other expressions are evaluated upon invocation of the macro.</p>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
